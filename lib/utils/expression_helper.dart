@@ -17,7 +17,7 @@ class ExpressionHelper {
       part = part.trim();
       if (part.startsWith("'") && part.endsWith("'")) {
         out += part.substring(1, part.length - 1);
-      } else if (part.contains(RegExp(r'^\d+\$'))) {
+      } else if (part.contains(RegExp(r'^\d+$'))) {
         out += part;
       } else if (part.startsWith('year(')) {
         final inner = _innerOf(part, 'year');
@@ -37,6 +37,7 @@ class ExpressionHelper {
           }
         }
       } else if (part.startsWith('pad(')) {
+        // TODO Fix
         final inner = _innerOf(part, 'pad');
         if (inner != null) {
           final args = _splitArgs(inner);
@@ -49,6 +50,7 @@ class ExpressionHelper {
           out += n.toString().padLeft(len, '0');
         }
       } else if (part.startsWith('seq(')) {
+        // TODO Fix
         final inner = _innerOf(part, 'seq');
         if (inner != null) {
           final name = inner.trim();
@@ -124,9 +126,60 @@ class ExpressionHelper {
   }
 
   static String? _innerOf(String s, String fn) {
-    final re = RegExp(r'\\b' + RegExp.escape(fn) + r'\\((.*)\\)\$');
-    final m = re.firstMatch(s);
-    return m?.group(1);
+    final startIdx = s.indexOf('$fn(');
+    if (startIdx == -1) {
+      return null;
+    }
+    final openIdx = s.indexOf('(', startIdx + fn.length);
+    if (openIdx == -1 || openIdx + 1 >= s.length) {
+      return null;
+    }
+
+    int depth = 0;
+    bool inSingleQuote = false;
+    bool inDoubleQuote = false;
+    final buf = StringBuffer();
+
+    for (int i = openIdx + 1; i < s.length; i++) {
+      final ch = s[i];
+      bool isEscaped = false;
+      int back = i - 1;
+      while (back >= 0 && s[back] == r'\') {
+        isEscaped = !isEscaped;
+        back--;
+      }
+      if (!isEscaped && ch == "'" && !inDoubleQuote) {
+        inSingleQuote = !inSingleQuote;
+        buf.write(ch);
+        continue;
+      }
+      if (!isEscaped && ch == '"' && !inSingleQuote) {
+        inDoubleQuote = !inDoubleQuote;
+        buf.write(ch);
+        continue;
+      }
+      if (inSingleQuote || inDoubleQuote) {
+        buf.write(ch);
+        continue;
+      }
+      if (ch == '(') {
+        depth++;
+        buf.write(ch);
+        continue;
+      } else if (ch == ')') {
+        if (depth == 0) {
+          final inner = buf.toString();
+          return inner;
+        } else {
+          depth--;
+          buf.write(ch);
+          continue;
+        }
+      } else {
+        buf.write(ch);
+      }
+    }
+    return null;
   }
 
   static List<String> _splitPlus(String expr) {
@@ -135,7 +188,7 @@ class ExpressionHelper {
     bool inQuote = false;
     for (int i = 0; i < expr.length; i++) {
       final ch = expr[i];
-      if (ch == "'" && (i == 0 || expr[i - 1] != '\\\\')) {
+      if (ch == "'" && (i == 0 || expr[i - 1] != '\\')) {
         inQuote = !inQuote;
         cur += ch;
       } else if (ch == '+' && !inQuote) {
@@ -155,7 +208,7 @@ class ExpressionHelper {
     bool inQuote = false;
     for (int i = 0; i < s.length; i++) {
       final ch = s[i];
-      if (ch == "'" && (i == 0 || s[i - 1] != '\\\\')) {
+      if (ch == "'" && (i == 0 || s[i - 1] != '\\')) {
         inQuote = !inQuote;
         cur += ch;
       } else if (ch == ',' && !inQuote) {
@@ -266,7 +319,7 @@ class ExpressionHelper {
     return _resolveValue(token, values, localScope);
   }
 
-  static String _two(int n) => n < 10 ? '0\$n' : '\$n';
+  static String _two(int n) => n < 10 ? '0$n' : '$n';
 
   static String _genUuid() {
     final r = Random();

@@ -112,7 +112,7 @@ class _DynamicFormState extends State<DynamicForm> {
     autosaveDebounceMs = bs['debounceMs'] ?? autosaveDebounceMs;
     final templ = bs['storageKeyTemplate'] ?? '';
     if (templ is String && templ.contains('\${')) {
-      storageKey = templ.replaceAllMapped(RegExp(r'\\${([^}]+)\\}'), (m) {
+      storageKey = templ.replaceAllMapped(RegExp(r'\$\{([^}]+)\}'), (m) {
         final expr = m.group(1)!;
         return ExpressionHelper.compute('\${$expr}', values, seqCounters);
       });
@@ -171,7 +171,7 @@ class _DynamicFormState extends State<DynamicForm> {
   // ---------------------- change / autosave / compute ---------------------
   void onFieldChanged(String key, dynamic value) {
     values[key] = value;
-    // TODO FIX
+    // TODO Fix?
     // if (controllers.containsKey(key)) {
     //   controllers[key]!.text = value?.toString() ?? '';
     // }

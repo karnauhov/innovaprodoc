@@ -6,10 +6,9 @@ class StorageBackend {
 
   StorageBackend() {
     try {
-      // test access
-      //final ls = web.window.localStorage;
-      //ls.add() ['__storage_test__'] = '1';
-      //ls.remove('__storage_test__');
+      final ls = web.window.localStorage;
+      ls.setItem('__storage_test__', '1');
+      ls.removeItem('__storage_test__');
       available = true;
     } catch (e) {
       available = false;
@@ -19,8 +18,7 @@ class StorageBackend {
   String? getItem(String key) {
     if (available) {
       try {
-        // ignore: deprecated_member_use
-        return web.window.localStorage[key];
+        return web.window.localStorage.getItem(key);
       } catch (e) {
         available = false;
         return _mem[key];
@@ -33,8 +31,7 @@ class StorageBackend {
   void setItem(String key, String value) {
     if (available) {
       try {
-        // ignore: deprecated_member_use
-        web.window.localStorage[key] = value;
+        web.window.localStorage.setItem(key, value);
         return;
       } catch (e) {
         available = false;
@@ -46,7 +43,7 @@ class StorageBackend {
   void removeItem(String key) {
     if (available) {
       try {
-        //web.window.localStorage.remove(key);
+        web.window.localStorage.removeItem(key);
         return;
       } catch (e) {
         available = false;

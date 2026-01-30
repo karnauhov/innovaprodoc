@@ -21,34 +21,57 @@ class FormHeaderBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.headlineMedium,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 350),
+              child: SizedBox(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
             ),
-          ),
-          StorageIndicator(usesLocalStorage: usesLocalStorage),
-          SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: onSaveDraft,
-            icon: Icon(Icons.save),
-            label: Text('Зберегти чернетку'),
-          ),
-          SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: onExport,
-            icon: Icon(Icons.download),
-            label: Text('Записати в файл'),
-          ),
-          SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: onImport,
-            icon: Icon(Icons.upload),
-            label: Text('Завантажити з файла'),
-          ),
-        ],
+
+            const SizedBox(width: 12),
+            StorageIndicator(usesLocalStorage: usesLocalStorage),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Зберегти чернетку',
+              child: IconButton(
+                onPressed: onSaveDraft,
+                icon: const Icon(Icons.save),
+                tooltip: 'Зберегти чернетку',
+              ),
+            ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Записати в файл',
+              child: IconButton(
+                onPressed: onExport,
+                icon: const Icon(Icons.download),
+                tooltip: 'Записати в файл',
+              ),
+            ),
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Завантажити з файла',
+              child: IconButton(
+                onPressed: onImport,
+                icon: const Icon(Icons.upload),
+                tooltip: 'Завантажити з файла',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
