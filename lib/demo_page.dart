@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 // ignore: deprecated_member_use, avoid_web_libraries_in_flutter
 import 'dart:html' as html;
-
 import 'package:innovaprodoc/dynamic_form.dart';
 
 class DemoPage extends StatefulWidget {
@@ -15,6 +14,13 @@ class DemoPage extends StatefulWidget {
 class _DemoPageState extends State<DemoPage> {
   Map<String, dynamic> schema = {};
   bool loaded = false;
+  String statusText = '';
+
+  void showStatusText(String txt) {
+    setState(() {
+      statusText = txt;
+    });
+  }
 
   void _loadSchemaFromString(String text) {
     try {
@@ -27,7 +33,7 @@ class _DemoPageState extends State<DemoPage> {
       setState(() {
         loaded = false;
       });
-      _showSnack('Помилка парсингу JSON файла: $e');
+      showStatusText('Помилка парсингу JSON файла: $e');
     }
   }
 
@@ -37,6 +43,7 @@ class _DemoPageState extends State<DemoPage> {
     uploadInput.onChange.listen((e) {
       final files = uploadInput.files;
       if (files == null || files.isEmpty) {
+        showStatusText('Файл не обрано');
         return;
       }
       final file = files[0];
@@ -45,22 +52,15 @@ class _DemoPageState extends State<DemoPage> {
         final result = reader.result;
         if (result is String) {
           _loadSchemaFromString(result);
-          if (loaded) {
-            _showSnack('JSON файл завантажено з локального сховища');
-          }
         } else {
-          _showSnack('Не вдалося прочитати файл як текст');
+          showStatusText('Не вдалося прочитати файл як текст');
         }
       });
       reader.onError.first.then((err) {
-        _showSnack('Помилка читання файлу: $err');
+        showStatusText('Помилка читання файлу: $err');
       });
       reader.readAsText(file);
     });
-  }
-
-  void _showSnack(String txt) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(txt)));
   }
 
   @override
@@ -78,6 +78,29 @@ class _DemoPageState extends State<DemoPage> {
                   label: Text('Відкрити JSON файл шаблону'),
                   onPressed: _loadFromFile,
                 ),
+
+                SizedBox(width: 12),
+
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Text(
+                      statusText.isEmpty ? '' : statusText,
+                      style: TextStyle(
+                        color: statusText.isEmpty
+                            ? Colors.grey[600]
+                            : Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -87,7 +110,7 @@ class _DemoPageState extends State<DemoPage> {
               padding: EdgeInsets.all(12),
               color: Colors.white,
               child: loaded
-                  ? DynamicForm(schema: schema)
+                  ? DynamicForm(schema: schema, onStatus: showStatusText)
                   : Center(
                       child: Text(
                         'Для початку роботи відкрийте шаблон документа',

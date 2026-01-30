@@ -14,7 +14,8 @@ import 'package:innovaprodoc/widgets/section_card.dart';
 
 class DynamicForm extends StatefulWidget {
   final Map<String, dynamic> schema;
-  const DynamicForm({super.key, required this.schema});
+  final void Function(String) onStatus;
+  const DynamicForm({super.key, required this.schema, required this.onStatus});
 
   @override
   State<DynamicForm> createState() => _DynamicFormState();
@@ -153,14 +154,10 @@ class _DynamicFormState extends State<DynamicForm> {
             }
           });
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  storage.usesLocalStorage()
-                      ? 'Чернетка відновлена з localStorage'
-                      : 'Чернетка відновлена з in-memory fallback',
-                ),
-              ),
+            widget.onStatus(
+              storage.usesLocalStorage()
+                  ? "Чернетка відновлена зі сховища"
+                  : "Чернетка відновлена із пам'яті",
             );
             setState(() {});
           });
@@ -218,14 +215,10 @@ class _DynamicFormState extends State<DynamicForm> {
     try {
       final encoded = json.encode(snapshot);
       storage.setItem(storageKey!, encoded);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            storage.usesLocalStorage()
-                ? 'Чернетка збережена (localStorage)'
-                : 'Чернетка збережена (in-memory fallback)',
-          ),
-        ),
+      widget.onStatus(
+        storage.usesLocalStorage()
+            ? "Чернетка збережена у сховище"
+            : "Чернетка збережена у пам'ять",
       );
     } catch (_) {}
   }
@@ -244,9 +237,7 @@ class _DynamicFormState extends State<DynamicForm> {
     // Clicking the anchor may be restricted in some sandboxed frames; still create the link.
     a.click();
     html.Url.revokeObjectUrl(url);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Експортовано чернетку у файл $filename')),
-    );
+    widget.onStatus('Експортовано чернетку у файл $filename');
   }
 
   void _importDraftFromFile() {
@@ -275,28 +266,16 @@ class _DynamicFormState extends State<DynamicForm> {
               }
             });
             setState(() {});
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Імпортовано чернетку з файлу')),
-            );
+            widget.onStatus('Імпортовано чернетку з файлу');
           } catch (err) {
-            // ignore: use_build_context_synchronously
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Помилка парсингу файлу: $err')),
-            );
+            widget.onStatus('Помилка парсингу файлу: $err');
           }
         } else {
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Не вдалося прочитати файл як текст')),
-          );
+          widget.onStatus('Не вдалося прочитати файл як текст');
         }
       });
       reader.onError.first.then((err) {
-        ScaffoldMessenger.of(
-          // ignore: use_build_context_synchronously
-          context,
-        ).showSnackBar(SnackBar(content: Text('Помилка читання файлу: $err')));
+        widget.onStatus('Помилка читання файлу: $err');
       });
       reader.readAsText(file);
     });
@@ -320,12 +299,8 @@ class _DynamicFormState extends State<DynamicForm> {
                 ExpressionHelper.evaluateBoolExpression(when, values)) {
               final count = repeaterData[key]?.length ?? 0;
               if (count < min) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Потрібно додати мінімум $min елементів у $key',
-                    ),
-                  ),
+                widget.onStatus(
+                  'Потрібно додати мінімум $min елементів у $key',
                 );
               }
             }
@@ -377,9 +352,7 @@ class _DynamicFormState extends State<DynamicForm> {
             onSaveDraft: _saveDraftToLocal,
             onValidateAndSubmit: () {
               if (!_validateForm()) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Виправте помилки у формі')),
-                );
+                widget.onStatus('Виправте помилки у формі');
                 return;
               }
               values['status'] = 'SUBMITTED';
@@ -390,9 +363,7 @@ class _DynamicFormState extends State<DynamicForm> {
               final toast = submit != null
                   ? (submit['onSuccess']?['toast'])
                   : 'Submitted';
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(toast)));
+              widget.onStatus(toast);
               _saveDraftToLocal();
             },
           ),
