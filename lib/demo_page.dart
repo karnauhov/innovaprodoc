@@ -66,34 +66,33 @@ class _DemoPageState extends State<DemoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Редактор JSON документа')),
+      appBar: AppBar(title: Text('Редактор InNovaPro документа')),
       body: Column(
         children: [
-          // Top controls row
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
                 ElevatedButton.icon(
                   icon: Icon(Icons.upload_file),
-                  label: Text('Відкрити JSON файл'),
+                  label: Text('Відкрити JSON файл шаблону'),
                   onPressed: _loadFromFile,
                 ),
               ],
             ),
           ),
-
-          // Divider
           Divider(height: 1),
-
-          // Generated form area — full width, occupies remaining height
           Expanded(
             child: Container(
               padding: EdgeInsets.all(12),
               color: Colors.white,
               child: loaded
                   ? DynamicForm(schema: schema)
-                  : Center(child: Text('Тут буде відображен документ')),
+                  : Center(
+                      child: Text(
+                        'Для початку роботи відкрийте шаблон документа',
+                      ),
+                    ),
             ),
           ),
         ],

@@ -7,7 +7,7 @@ class DocApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'InNovaPro Docs',
+      title: 'InNovaPro документи',
       theme: ThemeData(primarySwatch: Colors.teal),
       home: DemoPage(),
       debugShowCheckedModeBanner: false,
