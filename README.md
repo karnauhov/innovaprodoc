@@ -1,6 +1,6 @@
 # inNovaPro Doc
 
-This is a test task to [inNovaPro](https://innova-pro.com.ua) company.
+This is a test task for [inNovaPro](https://innova-pro.com.ua) company.
 
 ## Getting Started
 
