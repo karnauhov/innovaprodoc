@@ -1,0 +1,314 @@
+{
+  "schemaVersion": "1.0.0",
+  "formId": "documentForm",
+  "title": "Створення документа",
+  "locale": "uk-UA",
+
+  "behavior": {
+    "autosave": {
+      "enabled": true,
+      "debounceMs": 700,
+      "storage": "local",
+      "storageKeyTemplate": "draft:document:${docId}"
+    },
+    "unsavedChangesGuard": true
+  },
+
+  "dataModel": {
+    "docId": { "type": "string", "default": "${uuid()}" },
+    "status": { "type": "string", "default": "DRAFT" }
+  },
+
+  "enums": {
+    "documentType": [
+      { "value": "MEMO", "label": "Службова записка" },
+      { "value": "ORDER", "label": "Наказ" },
+      { "value": "CONTRACT", "label": "Договір" }
+    ],
+    "department": [
+      { "value": "IT", "label": "ІТ" },
+      { "value": "FIN", "label": "Фінанси" },
+      { "value": "LEGAL", "label": "Юрвідділ" },
+      { "value": "HR", "label": "HR" }
+    ],
+    "currency": [
+      { "value": "UAH", "label": "UAH" },
+      { "value": "USD", "label": "USD" },
+      { "value": "EUR", "label": "EUR" }
+    ],
+    "executorRole": [
+      { "value": "EXECUTOR", "label": "Виконавець" },
+      { "value": "APPROVER", "label": "Погоджувач" }
+    ]
+  },
+
+  "sections": [
+    {
+      "id": "header",
+      "title": "Реквізити",
+      "fields": [
+        {
+          "key": "docType",
+          "type": "select",
+          "label": "Тип документа",
+          "required": true,
+          "optionsRef": "documentType",
+          "ui": { "widget": "dropdown" }
+        },
+        {
+          "key": "title",
+          "type": "text",
+          "label": "Заголовок",
+          "required": true,
+          "validators": [
+            { "rule": "minLength", "value": 5, "message": "Мінімум 5 символів" },
+            { "rule": "maxLength", "value": 120, "message": "Максимум 120 символів" }
+          ],
+          "ui": { "widget": "textField", "hint": "Наприклад: Зміна графіку чергувань" }
+        },
+        {
+          "key": "number",
+          "type": "text",
+          "label": "Номер",
+          "readOnly": true,
+          "computed": "${'DOC-' + year(now()) + '-' + pad(seq('doc'), 6)}",
+          "ui": { "widget": "textField" }
+        },
+        {
+          "key": "date",
+          "type": "date",
+          "label": "Дата",
+          "required": true,
+          "default": "${today()}",
+          "ui": { "widget": "datePicker" }
+        },
+        {
+          "key": "department",
+          "type": "select",
+          "label": "Підрозділ",
+          "required": true,
+          "optionsRef": "department",
+          "ui": { "widget": "dropdown" }
+        }
+      ]
+    },
+
+    {
+      "id": "content",
+      "title": "Зміст",
+      "fields": [
+        {
+          "key": "description",
+          "type": "multiline",
+          "label": "Опис",
+          "required": true,
+          "validators": [
+            { "rule": "minLength", "value": 10, "message": "Мінімум 10 символів" },
+            { "rule": "maxLength", "value": 2000, "message": "Максимум 2000 символів" }
+          ],
+          "ui": { "widget": "textArea", "minLines": 4, "maxLines": 10 }
+        }
+      ]
+    },
+
+    {
+      "id": "contractExtra",
+      "title": "Дані договору",
+      "visibleWhen": "${docType == 'CONTRACT'}",
+      "fields": [
+        {
+          "key": "contractor",
+          "type": "text",
+          "label": "Контрагент",
+          "required": true,
+          "visibleWhen": "${docType == 'CONTRACT'}",
+          "ui": { "widget": "textField", "hint": "ТОВ \"Ромашка\"" }
+        },
+        {
+          "key": "amount",
+          "type": "money",
+          "label": "Сума",
+          "required": true,
+          "visibleWhen": "${docType == 'CONTRACT'}",
+          "validators": [
+            { "rule": "gt", "value": 0, "message": "Сума має бути > 0" }
+          ],
+          "ui": { "widget": "moneyField" }
+        },
+        {
+          "key": "currency",
+          "type": "select",
+          "label": "Валюта",
+          "required": true,
+          "visibleWhen": "${docType == 'CONTRACT'}",
+          "optionsRef": "currency",
+          "default": "UAH",
+          "ui": { "widget": "dropdown" }
+        }
+      ]
+    },
+
+    {
+      "id": "orderExtra",
+      "title": "Дані наказу",
+      "visibleWhen": "${docType == 'ORDER'}",
+      "fields": [
+        {
+          "key": "effectiveDate",
+          "type": "date",
+          "label": "Дата набрання чинності",
+          "required": true,
+          "visibleWhen": "${docType == 'ORDER'}",
+          "validators": [
+            { "rule": "gteField", "field": "date", "message": "Не може бути раніше дати документа" }
+          ],
+          "ui": { "widget": "datePicker" }
+        }
+      ]
+    },
+
+    {
+      "id": "memoExtra",
+      "title": "Дані службової записки",
+      "visibleWhen": "${docType == 'MEMO'}",
+      "fields": [
+        {
+          "key": "dueDate",
+          "type": "date",
+          "label": "Термін виконання",
+          "required": false,
+          "visibleWhen": "${docType == 'MEMO'}",
+          "validators": [
+            { "rule": "gteField", "field": "date", "message": "Не може бути раніше дати документа" }
+          ],
+          "ui": { "widget": "datePicker" }
+        }
+      ]
+    },
+
+    {
+      "id": "executors",
+      "title": "Виконавці / погоджувачі",
+      "fields": [
+        {
+          "key": "assignees",
+          "type": "repeater",
+          "label": "Список осіб",
+          "minItemsWhen": [
+            { "when": "${docType == 'ORDER' || docType == 'CONTRACT'}", "min": 1 }
+          ],
+          "ui": { "addLabel": "Додати особу", "removeLabel": "Видалити" },
+          "item": {
+            "fields": [
+              {
+                "key": "fullName",
+                "type": "text",
+                "label": "ПІБ",
+                "required": true,
+                "validators": [
+                  { "rule": "minLength", "value": 3, "message": "Занадто коротко" }
+                ],
+                "ui": { "widget": "textField", "hint": "Іваненко Іван Іванович" }
+              },
+              {
+                "key": "role",
+                "type": "select",
+                "label": "Роль",
+                "required": true,
+                "optionsRef": "executorRole",
+                "default": "EXECUTOR",
+                "ui": { "widget": "dropdown" }
+              },
+              {
+                "key": "email",
+                "type": "text",
+                "label": "Email",
+                "required": true,
+                "validators": [
+                  { "rule": "email", "message": "Невірний формат email" }
+                ],
+                "ui": { "widget": "textField", "keyboard": "email" }
+              }
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "sign",
+      "title": "Підпис",
+      "fields": [
+        {
+          "key": "requiresSignature",
+          "type": "bool",
+          "label": "Потребує підпису",
+          "default": false,
+          "ui": { "widget": "switch" }
+        },
+        {
+          "key": "signer",
+          "type": "text",
+          "label": "Підписант",
+          "requiredWhen": "${requiresSignature == true}",
+          "visibleWhen": "${requiresSignature == true}",
+          "ui": { "widget": "textField", "hint": "Наприклад: Директор департаменту" }
+        }
+      ]
+    },
+
+    {
+      "id": "attachments",
+      "title": "Вкладення",
+      "fields": [
+        {
+          "key": "files",
+          "type": "attachments",
+          "label": "Файли",
+          "required": false,
+          "constraints": {
+            "maxCount": 5,
+            "maxSizeBytes": 10485760,
+            "allowedExtensions": [ "pdf", "png", "jpg", "jpeg", "docx" ]
+          },
+          "ui": { "widget": "filePicker", "addLabel": "Додати файл" }
+        }
+      ]
+    }
+  ],
+
+  "actions": [
+    {
+      "id": "saveDraft",
+      "label": "Зберегти чернетку",
+      "type": "localSave",
+      "payload": {
+        "status": "DRAFT",
+        "savedAt": "${now()}"
+      }
+    },
+    {
+      "id": "submit",
+      "label": "Відправити",
+      "type": "submit",
+      "preconditions": [
+        { "rule": "validateForm", "message": "Виправте помилки у формі" }
+      ],
+      "onSuccess": {
+        "set": { "status": "SUBMITTED", "submittedAt": "${now()}" },
+        "toast": "Документ відправлено"
+      },
+      "onFailure": {
+        "toast": "Не вдалося відправити. Документ лишився чернеткою."
+      }
+    }
+  ],
+
+  "expressionLanguage": {
+    "syntax": "${...}",
+    "notes": [
+      "Підтримка: ==, !=, &&, ||, +, функції now(), today(), year(date), uuid(), pad(n,len), seq(name)",
+      "gteField validator порівнює поточне поле з іншим полем форми"
+    ]
+  }
+}
