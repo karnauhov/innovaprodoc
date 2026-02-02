@@ -1,8 +1,8 @@
-# innovaprodoc
+# inNovaPro Doc
 
-InNovaProDoc test task.
+This is a test task to [inNovaPro](https://innova-pro.com.ua) company.
 
 ## Getting Started
 
-Please use the [example template](/template.json) to create your own document template.
+Please use the [example template](/assets/template.json) to create your own document template.
 
